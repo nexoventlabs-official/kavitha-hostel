@@ -39,7 +39,7 @@ export default function RegisteredUsers() {
     // eslint-disable-next-line
   }, []);
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [branch]);
+  useEffect(() => { load(); loadBills(); /* eslint-disable-next-line */ }, [branch]);
 
   const remove = async (id) => {
     if (!confirm('Delete this resident? This does not refund any payments.')) return;

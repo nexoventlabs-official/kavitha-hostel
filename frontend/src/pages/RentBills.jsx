@@ -90,11 +90,6 @@ export default function RentBills() {
     } finally { setSaving(false); }
   };
 
-  const markPaid = async (b) => {
-    if (!confirm(`Mark ${b.user?.name}'s ${b.monthLabel || b.monthKey} bill as paid (₹${b.totalAmount})?`)) return;
-    await api.post(`/payment/manual/${b._id}`, { paymentRef: 'admin-marked' });
-    load();
-  };
   const remove = async (id) => {
     if (!confirm('Delete this bill?')) return;
     await api.delete(`/rent-bills/${id}`);
@@ -287,11 +282,6 @@ export default function RentBills() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="inline-flex gap-1">
-                        {!b.paid && (
-                          <button onClick={() => markPaid(b)} title="Mark as paid" className="px-2 py-1 text-xs rounded-md bg-emerald-50 text-emerald-700 hover:bg-emerald-100">
-                            Mark paid
-                          </button>
-                        )}
                         <button onClick={() => openEdit(b)} title="Edit" className="p-2 rounded-md text-slate-600 hover:bg-slate-100">
                           <Pencil size={14}/>
                         </button>

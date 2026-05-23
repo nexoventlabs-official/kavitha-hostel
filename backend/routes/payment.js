@@ -89,28 +89,39 @@ router.post('/razorpay-webhook', async (req, res) => {
         const paymentId =
           event.payload?.payment?.entity?.id ||
           event.payload?.payment_link?.entity?.payments?.[0]?.payment_id;
+        const notes = event.payload?.payment?.entity?.notes || {};
 
-        console.log('[payment] payment event details', { linkId, paymentId });
+        console.log('[payment] payment event details', { linkId, paymentId, notes });
 
+        let bill = null;
+
+        // Try to find by payment link ID first (Razorpay Payment Links)
         if (linkId) {
-          const bill = await RentBill.findOne({ razorpayPaymentLinkId: linkId });
-          if (bill) {
-            console.log('[payment] bill found', { billId: bill._id.toString(), currentPaid: bill.paid });
-            if (!bill.paid) {
-              console.log('[payment] marking bill as paid via Razorpay webhook');
-              await markBillPaid(bill, {
-                paymentId: paymentId || '',
-                method: 'razorpay_link',
-                source: 'razorpay_webhook',
-              });
-            } else {
-              console.log('[payment] bill already paid, skipping');
-            }
+          bill = await RentBill.findOne({ razorpayPaymentLinkId: linkId });
+        }
+
+        // If not found, try to find by reference_id in notes (Meta Native Pay)
+        if (!bill && notes.reference_id) {
+          const referenceId = String(notes.reference_id).replace(/^RENT-/i, '');
+          if (/^[a-f0-9]{24}$/i.test(referenceId)) {
+            bill = await RentBill.findById(referenceId);
+          }
+        }
+
+        if (bill) {
+          console.log('[payment] bill found', { billId: bill._id.toString(), currentPaid: bill.paid });
+          if (!bill.paid) {
+            console.log('[payment] marking bill as paid via Razorpay webhook');
+            await markBillPaid(bill, {
+              paymentId: paymentId || '',
+              method: 'meta_native',
+              source: 'razorpay_webhook',
+            });
           } else {
-            console.warn('[payment] no bill found for razorpayPaymentLinkId', linkId);
+            console.log('[payment] bill already paid, skipping');
           }
         } else {
-          console.warn('[payment] no linkId found in webhook payload');
+          console.warn('[payment] no bill found', { linkId, referenceId: notes.reference_id });
         }
       } else {
         console.log('[payment] ignoring non-payment event', { event: event.event });

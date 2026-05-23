@@ -70,17 +70,21 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="text-xs font-medium text-slate-600">Branch *</label>
-            <select name="branchId" required class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-brand-300 focus:border-brand-400">
+            <select id="branch-select" name="branchId" required class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-brand-300 focus:border-brand-400">
               <option value="">Select your branch</option>
             </select>
           </div>
           <div>
             <label class="text-xs font-medium text-slate-600">Block *</label>
-            <input name="block" required class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" placeholder="e.g. A" />
+            <select id="block-select" name="block" required class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-brand-300 focus:border-brand-400">
+              <option value="">Select branch first</option>
+            </select>
           </div>
           <div>
             <label class="text-xs font-medium text-slate-600">Room Number *</label>
-            <input name="roomNumber" required class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" placeholder="e.g. 204" />
+            <select id="room-select" name="roomNumber" required class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-brand-300 focus:border-brand-400">
+              <option value="">Select block first</option>
+            </select>
           </div>
           <div>
             <label class="text-xs font-medium text-slate-600">Date Joined *</label>
@@ -95,7 +99,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div class="sm:col-span-2">
             <label class="text-xs font-medium text-slate-600">Full Name *</label>
-            <input name="name" required class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" />
+            <input name="name" required class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" placeholder="e.g. John Doe" autocomplete="name" />
           </div>
           <div>
             <label class="text-xs font-medium text-slate-600">WhatsApp Number</label>
@@ -104,11 +108,11 @@
           </div>
           <div>
             <label class="text-xs font-medium text-slate-600">Optional Mobile</label>
-            <input name="mobile" class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" placeholder="(optional)" />
+            <input name="mobile" type="tel" class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" placeholder="(optional)" inputmode="tel" />
           </div>
           <div>
             <label class="text-xs font-medium text-slate-600">Age *</label>
-            <input type="number" name="age" min="1" max="120" required class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" />
+            <input type="number" name="age" min="1" max="120" required class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" inputmode="numeric" />
           </div>
           <div>
             <label class="text-xs font-medium text-slate-600">Gender *</label>
@@ -132,19 +136,19 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="text-xs font-medium text-slate-600">Father's Name</label>
-            <input name="fatherName" class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" />
+            <input name="fatherName" class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" autocomplete="name" />
           </div>
           <div>
             <label class="text-xs font-medium text-slate-600">Father's Mobile</label>
-            <input name="fatherMobile" class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" />
+            <input name="fatherMobile" type="tel" class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" inputmode="tel" />
           </div>
           <div>
             <label class="text-xs font-medium text-slate-600">Mother's Name</label>
-            <input name="motherName" class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" />
+            <input name="motherName" class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" autocomplete="name" />
           </div>
           <div>
             <label class="text-xs font-medium text-slate-600">Mother's Mobile</label>
-            <input name="motherMobile" class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" />
+            <input name="motherMobile" type="tel" class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" inputmode="tel" />
           </div>
           <div class="sm:col-span-2">
             <label class="text-xs font-medium text-slate-600">Permanent Living Address</label>
@@ -213,21 +217,87 @@
   if (!token) return showError('Missing registration token. Open the link from WhatsApp.');
 
   // ─── Init ───
+  let branchesData = [];
+  const branchSelect = $('branch-select');
+  const blockSelect = $('block-select');
+  const roomSelect = $('room-select');
+
   fetch(`/api/register/init?t=${encodeURIComponent(token)}`)
     .then((r) => r.ok ? r.json() : r.json().then((j) => Promise.reject(j)))
     .then((data) => {
       stateLoading.classList.add('hidden');
       form.classList.remove('hidden');
       $('phone-field').value = '+' + data.phone;
-      const sel = form.elements.branchId;
-      data.branches.forEach((b) => {
+      branchesData = data.branches || [];
+      branchesData.forEach((b) => {
         const opt = document.createElement('option');
         opt.value = b._id; opt.textContent = `${b.code} — ${b.name}`;
-        sel.appendChild(opt);
+        branchSelect.appendChild(opt);
       });
       if (data.alreadyRegistered) stateAlready.classList.remove('hidden');
     })
     .catch((err) => showError(err?.error || 'Unable to load registration link.'));
+
+  // ─── Branch → Block → Room dropdown logic ───
+  branchSelect.addEventListener('change', () => {
+    const branchId = branchSelect.value;
+    blockSelect.innerHTML = '<option value="">Select block</option>';
+    roomSelect.innerHTML = '<option value="">Select block first</option>';
+    if (!branchId) return;
+
+    const branch = branchesData.find((b) => b._id === branchId);
+    if (!branch || !branch.blocks || branch.blocks.length === 0) {
+      const opt = document.createElement('option');
+      opt.value = ''; opt.textContent = 'No blocks configured';
+      blockSelect.appendChild(opt);
+      return;
+    }
+
+    branch.blocks.forEach((blk) => {
+      const opt = document.createElement('option');
+      opt.value = blk.name; opt.textContent = blk.name;
+      blockSelect.appendChild(opt);
+    });
+  });
+
+  blockSelect.addEventListener('change', () => {
+    const branchId = branchSelect.value;
+    const blockName = blockSelect.value;
+    roomSelect.innerHTML = '<option value="">Select room</option>';
+    if (!branchId || !blockName) return;
+
+    const branch = branchesData.find((b) => b._id === branchId);
+    if (!branch) return;
+
+    const block = branch.blocks?.find((blk) => blk.name === blockName);
+    if (!block || !block.rooms || block.rooms.length === 0) {
+      const opt = document.createElement('option');
+      opt.value = ''; opt.textContent = 'No rooms configured';
+      roomSelect.appendChild(opt);
+      return;
+    }
+
+    block.rooms.forEach((room) => {
+      const opt = document.createElement('option');
+      opt.value = room; opt.textContent = room;
+      roomSelect.appendChild(opt);
+    });
+  });
+
+  // ─── Title case formatting for name inputs ───
+  function toTitleCase(str) {
+    return str.replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
+  const nameInputs = form.querySelectorAll('input[name="name"], input[name="fatherName"], input[name="motherName"]');
+  nameInputs.forEach((inp) => {
+    inp.addEventListener('input', (e) => {
+      const start = e.target.selectionStart;
+      const end = e.target.selectionEnd;
+      e.target.value = toTitleCase(e.target.value);
+      e.target.setSelectionRange(start, end);
+    });
+  });
 
   // ─── Photo crop logic ───
   const cropContainer = $('crop-container');

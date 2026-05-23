@@ -46,7 +46,7 @@ router.get('/init', async (req, res) => {
 
     const branches = await Branch.find({ active: true })
       .sort({ name: 1 })
-      .select('code name')
+      .select('code name blocks')
       .lean();
 
     const existing = await User.findOne({ phone: reg.phone }).lean();

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Plus, Pencil, Trash2, X, ExternalLink } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import api from '../api';
 
 const blank = {
   code: '', name: '', address: '', reviewUrl: '', websiteUrl: '', contactPhone: '', sheetTab: '', active: true,
+  blocks: [],
 };
 
 export default function Branches() {
@@ -77,6 +78,12 @@ export default function Branches() {
               <div className="mt-3 space-y-1 text-xs text-slate-500">
                 <div><span className="font-medium text-slate-700">Sheet tab:</span> {b.sheetTab || b.code}</div>
                 {b.contactPhone && <div><span className="font-medium text-slate-700">Phone:</span> {b.contactPhone}</div>}
+                {b.blocks && b.blocks.length > 0 && (
+                  <div>
+                    <span className="font-medium text-slate-700">Blocks:</span>{' '}
+                    {b.blocks.map((blk) => blk.name).join(', ')} ({b.blocks.reduce((s, blk) => s + (blk.rooms?.length || 0), 0)} rooms)
+                  </div>
+                )}
                 {b.reviewUrl && (
                   <a href={b.reviewUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-brand-700 hover:underline">
                     <ExternalLink size={11}/> Google review URL
@@ -135,6 +142,69 @@ export default function Branches() {
                 <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
                 Show this branch in the registration form
               </label>
+
+              {/* Blocks and Rooms */}
+              <div className="border-t border-slate-200 pt-4 mt-4">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="label !mb-0">Blocks & Rooms</label>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, blocks: [...form.blocks, { name: '', rooms: [] }] })}
+                    className="text-sm text-brand-700 hover:text-brand-800 font-medium"
+                  >
+                    + Add Block
+                  </button>
+                </div>
+                {form.blocks.length === 0 ? (
+                  <div className="text-sm text-slate-500 italic">No blocks added yet</div>
+                ) : (
+                  <div className="space-y-3">
+                    {form.blocks.map((block, bIdx) => (
+                      <div key={bIdx} className="border border-slate-200 rounded-lg p-3 bg-slate-50">
+                        <div className="flex items-center gap-2 mb-2">
+                          <input
+                            className="input !py-1.5 text-sm"
+                            placeholder="Block name (e.g. A, B, Main)"
+                            value={block.name}
+                            onChange={(e) => {
+                              const newBlocks = [...form.blocks];
+                              newBlocks[bIdx].name = e.target.value;
+                              setForm({ ...form, blocks: newBlocks });
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newBlocks = form.blocks.filter((_, i) => i !== bIdx);
+                              setForm({ ...form, blocks: newBlocks });
+                            }}
+                            className="text-red-600 hover:text-red-700 p-1"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                        <div>
+                          <label className="text-xs text-slate-600 mb-1 block">Rooms (comma separated)</label>
+                          <input
+                            className="input !py-1.5 text-sm"
+                            placeholder="101, 102, 103, 201, 202"
+                            value={block.rooms.join(', ')}
+                            onChange={(e) => {
+                              const rooms = e.target.value
+                                .split(',')
+                                .map((r) => r.trim())
+                                .filter(Boolean);
+                              const newBlocks = [...form.blocks];
+                              newBlocks[bIdx].rooms = rooms;
+                              setForm({ ...form, blocks: newBlocks });
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             <div className="px-5 py-4 border-t flex justify-end gap-2">
               <button type="button" onClick={() => setShowForm(false)} className="btn-secondary" disabled={saving}>Cancel</button>

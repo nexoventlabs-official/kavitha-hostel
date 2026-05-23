@@ -6,6 +6,7 @@ const mongoose = require('mongoose');
  *  - rent bills
  *  - Google review URL (sent via WhatsApp when a resident chooses "Review & Rating")
  *  - Google Sheet tab name (auto-derived from `code` if empty)
+ *  - blocks and rooms for structured registration
  */
 const BranchSchema = new mongoose.Schema(
   {
@@ -17,6 +18,14 @@ const BranchSchema = new mongoose.Schema(
     contactPhone: { type: String, default: '', trim: true },
     sheetTab: { type: String, default: '', trim: true },
     active: { type: Boolean, default: true },
+    // Blocks and rooms for this branch
+    blocks: {
+      type: [{
+        name: { type: String, required: true, trim: true },
+        rooms: { type: [String], default: [] }, // Room numbers as strings
+      }],
+      default: [],
+    },
   },
   { timestamps: true }
 );

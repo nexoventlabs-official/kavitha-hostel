@@ -163,12 +163,12 @@ export default function Branches() {
                       <div key={bIdx} className="border border-slate-200 rounded-lg p-3 bg-slate-50">
                         <div className="flex items-center gap-2 mb-2">
                           <input
-                            className="input !py-1.5 text-sm"
+                            className="input !py-1.5 text-sm uppercase"
                             placeholder="Block name (e.g. A, B, Main)"
                             value={block.name}
                             onChange={(e) => {
                               const newBlocks = [...form.blocks];
-                              newBlocks[bIdx].name = e.target.value;
+                              newBlocks[bIdx].name = e.target.value.toUpperCase();
                               setForm({ ...form, blocks: newBlocks });
                             }}
                           />

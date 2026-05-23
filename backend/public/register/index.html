@@ -269,7 +269,7 @@
     const branch = branchesData.find((b) => b._id === branchId);
     if (!branch) return;
 
-    const block = branch.blocks?.find((blk) => blk.name === blockName);
+    const block = branch.blocks?.find((blk) => blk.name.trim().toUpperCase() === blockName.trim().toUpperCase());
     if (!block || !block.rooms || block.rooms.length === 0) {
       const opt = document.createElement('option');
       opt.value = ''; opt.textContent = 'No rooms configured';

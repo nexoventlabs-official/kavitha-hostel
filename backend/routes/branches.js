@@ -17,7 +17,7 @@ router.get('/all', auth, async (_req, res) => {
 
 router.post('/', auth, async (req, res) => {
   try {
-    const { code, name, address, reviewUrl, websiteUrl, contactPhone, sheetTab, active } = req.body;
+    const { code, name, address, reviewUrl, websiteUrl, contactPhone, sheetTab, active, blocks } = req.body;
     if (!code || !name) return res.status(400).json({ error: 'code and name required' });
     const doc = await Branch.create({
       code: code.trim().toUpperCase(),
@@ -28,6 +28,7 @@ router.post('/', auth, async (req, res) => {
       contactPhone: contactPhone || '',
       sheetTab: sheetTab || '',
       active: active === false ? false : true,
+      blocks: blocks || [],
     });
     res.json({ branch: doc });
   } catch (err) {
@@ -39,7 +40,7 @@ router.post('/', auth, async (req, res) => {
 
 router.put('/:id', auth, async (req, res) => {
   try {
-    const allowed = ['name', 'address', 'reviewUrl', 'websiteUrl', 'contactPhone', 'sheetTab', 'active'];
+    const allowed = ['name', 'address', 'reviewUrl', 'websiteUrl', 'contactPhone', 'sheetTab', 'active', 'blocks'];
     const update = {};
     for (const k of allowed) if (req.body[k] !== undefined) update[k] = req.body[k];
     const doc = await Branch.findByIdAndUpdate(req.params.id, { $set: update }, { new: true });

@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Kavitha PG — Resident Registration</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'] },
+          colors: {
+            brand: {
+              50:'#eef4ff',100:'#dbe6ff',200:'#b8cdff',300:'#8aa9ff',
+              400:'#5a80ff',500:'#345dff',600:'#1f3b6b',700:'#19305a',
+              800:'#142547',900:'#0e1b34'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    .crop-container { position: relative; width: 100%; max-width: 320px; aspect-ratio: 35/45; overflow: hidden; background: #f3f4f6; border-radius: 12px; border: 2px dashed #cbd5e1; touch-action: none; }
+    .crop-img { position: absolute; left: 50%; top: 50%; transform-origin: center center; user-select: none; pointer-events: none; }
+  </style>
+</head>
+<body class="font-sans bg-slate-50 min-h-screen">
+  <header class="bg-brand-700 text-white py-5 px-5 shadow">
+    <div class="max-w-3xl mx-auto flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xl">🏠</div>
+      <div>
+        <h1 class="font-bold text-lg leading-tight">Kavitha PG — Resident Registration</h1>
+        <p class="text-xs text-brand-100">Fill the form to complete your registration. The form is sent to your WhatsApp on submit.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-4 py-6">
+    <div id="state-loading" class="bg-white rounded-xl border p-8 text-center text-slate-500">
+      Loading your registration link…
+    </div>
+
+    <div id="state-error" class="hidden bg-rose-50 border border-rose-200 text-rose-700 rounded-xl p-6 text-sm">
+      <div class="font-semibold mb-1">Link not valid</div>
+      <div id="error-msg">This registration link is no longer valid.</div>
+      <div class="mt-3 text-xs text-rose-600">Please request a fresh registration link from WhatsApp by typing <em>hi</em> to the Kavitha PG bot.</div>
+    </div>
+
+    <div id="state-already" class="hidden bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-6 text-sm">
+      <div class="font-semibold mb-1">Already registered</div>
+      You are already registered. You can re-submit this form to update your details.
+    </div>
+
+    <div id="state-success" class="hidden bg-emerald-50 border border-emerald-200 rounded-xl p-8 text-center">
+      <div class="text-5xl">✅</div>
+      <h2 class="mt-3 text-xl font-bold text-emerald-800">Registration submitted!</h2>
+      <p class="mt-2 text-sm text-emerald-700">Your registration form has been generated and sent to your WhatsApp. You can close this page now.</p>
+    </div>
+
+    <form id="reg-form" class="hidden space-y-6">
+
+      <!-- Section: Stay details -->
+      <section class="bg-white rounded-xl border shadow-sm p-5">
+        <h2 class="font-semibold text-brand-700 mb-4">Stay Details</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs font-medium text-slate-600">Branch *</label>
+            <select name="branchId" required class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-brand-300 focus:border-brand-400">
+              <option value="">Select your branch</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-medium text-slate-600">Block *</label>
+            <input name="block" required class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" placeholder="e.g. A" />
+          </div>
+          <div>
+            <label class="text-xs font-medium text-slate-600">Room Number *</label>
+            <input name="roomNumber" required class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" placeholder="e.g. 204" />
+          </div>
+          <div>
+            <label class="text-xs font-medium text-slate-600">Date Joined *</label>
+            <input type="date" name="dateJoined" required class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" />
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Personal details -->
+      <section class="bg-white rounded-xl border shadow-sm p-5">
+        <h2 class="font-semibold text-brand-700 mb-4">Personal Details</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="sm:col-span-2">
+            <label class="text-xs font-medium text-slate-600">Full Name *</label>
+            <input name="name" required class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" />
+          </div>
+          <div>
+            <label class="text-xs font-medium text-slate-600">WhatsApp Number</label>
+            <input id="phone-field" name="phone" disabled class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200 bg-slate-100 text-slate-500" />
+            <p class="text-[11px] text-slate-500 mt-1">This is your WhatsApp number and cannot be changed.</p>
+          </div>
+          <div>
+            <label class="text-xs font-medium text-slate-600">Optional Mobile</label>
+            <input name="mobile" class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" placeholder="(optional)" />
+          </div>
+          <div>
+            <label class="text-xs font-medium text-slate-600">Age *</label>
+            <input type="number" name="age" min="1" max="120" required class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" />
+          </div>
+          <div>
+            <label class="text-xs font-medium text-slate-600">Gender *</label>
+            <select name="gender" required class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200 bg-white">
+              <option value="">Select</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="sm:col-span-2">
+            <label class="text-xs font-medium text-slate-600">Working / Study Location Address</label>
+            <textarea name="workAddress" rows="2" class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Parent details -->
+      <section class="bg-white rounded-xl border shadow-sm p-5">
+        <h2 class="font-semibold text-brand-700 mb-4">Parent / Guardian Details</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="text-xs font-medium text-slate-600">Father's Name</label>
+            <input name="fatherName" class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" />
+          </div>
+          <div>
+            <label class="text-xs font-medium text-slate-600">Father's Mobile</label>
+            <input name="fatherMobile" class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" />
+          </div>
+          <div>
+            <label class="text-xs font-medium text-slate-600">Mother's Name</label>
+            <input name="motherName" class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" />
+          </div>
+          <div>
+            <label class="text-xs font-medium text-slate-600">Mother's Mobile</label>
+            <input name="motherMobile" class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="text-xs font-medium text-slate-600">Permanent Living Address</label>
+            <textarea name="livingAddress" rows="2" class="mt-1 w-full px-3 py-2 rounded-lg border border-slate-200"></textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Photo with crop -->
+      <section class="bg-white rounded-xl border shadow-sm p-5">
+        <h2 class="font-semibold text-brand-700 mb-1">Passport Photo *</h2>
+        <p class="text-xs text-slate-500 mb-3">Upload a clear photo. You can zoom and drag inside the box to crop to passport ratio (3.5 × 4.5 cm).</p>
+        <div class="flex flex-col sm:flex-row gap-4 items-start">
+          <div class="crop-container" id="crop-container">
+            <img id="crop-img" class="crop-img" />
+            <div id="crop-placeholder" class="absolute inset-0 flex items-center justify-center text-slate-400 text-sm">Tap "Choose photo" below</div>
+          </div>
+          <div class="flex-1 w-full space-y-3">
+            <input id="photo-input" type="file" accept="image/*" class="block w-full text-sm text-slate-700 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-brand-700 file:text-white file:cursor-pointer" />
+            <div>
+              <label class="text-xs font-medium text-slate-600">Zoom</label>
+              <input id="zoom-range" type="range" min="1" max="4" step="0.01" value="1" class="w-full" />
+            </div>
+            <p class="text-[11px] text-slate-500">Drag to pan, slider to zoom. The cropped image will be saved as a passport-ratio JPEG.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section: Aadhar proof -->
+      <section class="bg-white rounded-xl border shadow-sm p-5">
+        <h2 class="font-semibold text-brand-700 mb-1">Aadhar Proof Photo *</h2>
+        <p class="text-xs text-slate-500 mb-3">Upload a clear photo of your Aadhar (front side).</p>
+        <input id="aadhar-input" type="file" accept="image/*" class="block w-full text-sm text-slate-700 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-brand-700 file:text-white file:cursor-pointer" />
+        <img id="aadhar-preview" class="mt-3 max-h-40 rounded-lg border hidden" />
+      </section>
+
+      <button id="submit-btn" type="submit" class="w-full bg-brand-700 hover:bg-brand-800 text-white font-medium py-3 rounded-xl shadow disabled:opacity-60">
+        Submit Registration
+      </button>
+
+      <div id="submit-error" class="hidden text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2"></div>
+
+      <p class="text-center text-xs text-slate-400 pt-2">Kavitha PG · {{year}}</p>
+    </form>
+  </main>
+
+<script>
+(function(){
+  const $ = (id) => document.getElementById(id);
+  const url = new URL(window.location.href);
+  const token = url.searchParams.get('t');
+
+  const stateLoading = $('state-loading');
+  const stateError = $('state-error');
+  const stateSuccess = $('state-success');
+  const stateAlready = $('state-already');
+  const form = $('reg-form');
+
+  function showError(msg) {
+    stateLoading.classList.add('hidden');
+    form.classList.add('hidden');
+    stateError.classList.remove('hidden');
+    $('error-msg').textContent = msg || 'This link is no longer valid.';
+  }
+
+  if (!token) return showError('Missing registration token. Open the link from WhatsApp.');
+
+  // ─── Init ───
+  fetch(`/api/register/init?t=${encodeURIComponent(token)}`)
+    .then((r) => r.ok ? r.json() : r.json().then((j) => Promise.reject(j)))
+    .then((data) => {
+      stateLoading.classList.add('hidden');
+      form.classList.remove('hidden');
+      $('phone-field').value = '+' + data.phone;
+      const sel = form.elements.branchId;
+      data.branches.forEach((b) => {
+        const opt = document.createElement('option');
+        opt.value = b._id; opt.textContent = `${b.code} — ${b.name}`;
+        sel.appendChild(opt);
+      });
+      if (data.alreadyRegistered) stateAlready.classList.remove('hidden');
+    })
+    .catch((err) => showError(err?.error || 'Unable to load registration link.'));
+
+  // ─── Photo crop logic ───
+  const cropContainer = $('crop-container');
+  const cropImg = $('crop-img');
+  const cropPh = $('crop-placeholder');
+  const photoInput = $('photo-input');
+  const zoomRange = $('zoom-range');
+  let pState = { scale: 1, tx: 0, ty: 0, imgW: 0, imgH: 0, dragging: false, startX: 0, startY: 0 };
+
+  function applyTransform() {
+    cropImg.style.transform = `translate(calc(-50% + ${pState.tx}px), calc(-50% + ${pState.ty}px)) scale(${pState.scale})`;
+  }
+
+  photoInput.addEventListener('change', (e) => {
+    const f = e.target.files?.[0]; if (!f) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      cropImg.onload = () => {
+        cropPh.style.display = 'none';
+        const box = cropContainer.getBoundingClientRect();
+        const ratioBox = box.width / box.height;
+        const imgRatio = cropImg.naturalWidth / cropImg.naturalHeight;
+        let baseW;
+        if (imgRatio > ratioBox) baseW = box.height * imgRatio;
+        else baseW = box.width;
+        cropImg.style.width = baseW + 'px';
+        cropImg.style.height = 'auto';
+        pState.imgW = baseW;
+        pState.imgH = baseW / imgRatio;
+        pState.scale = 1; pState.tx = 0; pState.ty = 0; zoomRange.value = 1;
+        applyTransform();
+      };
+      cropImg.src = ev.target.result;
+    };
+    reader.readAsDataURL(f);
+  });
+
+  zoomRange.addEventListener('input', (e) => {
+    pState.scale = parseFloat(e.target.value);
+    applyTransform();
+  });
+
+  function onDown(x, y) { pState.dragging = true; pState.startX = x - pState.tx; pState.startY = y - pState.ty; }
+  function onMove(x, y) { if (!pState.dragging) return; pState.tx = x - pState.startX; pState.ty = y - pState.startY; applyTransform(); }
+  function onUp() { pState.dragging = false; }
+
+  cropContainer.addEventListener('mousedown', (e) => onDown(e.clientX, e.clientY));
+  window.addEventListener('mousemove', (e) => onMove(e.clientX, e.clientY));
+  window.addEventListener('mouseup', onUp);
+  cropContainer.addEventListener('touchstart', (e) => { const t = e.touches[0]; onDown(t.clientX, t.clientY); }, { passive: true });
+  window.addEventListener('touchmove', (e) => { const t = e.touches[0]; if (t) onMove(t.clientX, t.clientY); }, { passive: true });
+  window.addEventListener('touchend', onUp);
+
+  async function getCroppedBlob() {
+    if (!cropImg.src) return null;
+    const box = cropContainer.getBoundingClientRect();
+    // Output canvas — passport ratio 35:45 — render at 700x900 for quality
+    const outW = 700, outH = 900;
+    const canvas = document.createElement('canvas');
+    canvas.width = outW; canvas.height = outH;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0,0,outW,outH);
+
+    // Map: cropContainer box (CSS px) → canvas px
+    const cssScale = outW / box.width;
+    // Image natural size in CSS px = pState.imgW * pState.scale by pState.imgH * pState.scale
+    const dispW = pState.imgW * pState.scale;
+    const dispH = pState.imgH * pState.scale;
+    const dx = (box.width / 2) - dispW / 2 + pState.tx;
+    const dy = (box.height / 2) - dispH / 2 + pState.ty;
+
+    ctx.drawImage(cropImg, dx * cssScale, dy * cssScale, dispW * cssScale, dispH * cssScale);
+    return new Promise((res) => canvas.toBlob((b) => res(b), 'image/jpeg', 0.92));
+  }
+
+  // ─── Aadhar preview ───
+  const aadharInput = $('aadhar-input');
+  const aadharPreview = $('aadhar-preview');
+  aadharInput.addEventListener('change', (e) => {
+    const f = e.target.files?.[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = (ev) => {
+      aadharPreview.src = ev.target.result;
+      aadharPreview.classList.remove('hidden');
+    };
+    r.readAsDataURL(f);
+  });
+
+  // ─── Submit ───
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = $('submit-btn');
+    const err = $('submit-error');
+    err.classList.add('hidden');
+
+    if (!cropImg.src) { err.textContent = 'Please upload a passport photo.'; err.classList.remove('hidden'); return; }
+    if (!aadharInput.files?.[0]) { err.textContent = 'Please upload Aadhar proof.'; err.classList.remove('hidden'); return; }
+
+    btn.disabled = true; btn.textContent = 'Submitting…';
+    try {
+      const photoBlob = await getCroppedBlob();
+      const fd = new FormData(form);
+      fd.append('token', token);
+      fd.append('photo', photoBlob, 'photo.jpg');
+      fd.append('aadhar', aadharInput.files[0]);
+
+      const resp = await fetch('/api/register/submit', { method: 'POST', body: fd });
+      const json = await resp.json();
+      if (!resp.ok) throw json;
+
+      form.classList.add('hidden');
+      stateSuccess.classList.remove('hidden');
+    } catch (e2) {
+      err.textContent = e2?.error || e2?.message || 'Submission failed. Please try again.';
+      err.classList.remove('hidden');
+      btn.disabled = false; btn.textContent = 'Submit Registration';
+    }
+  });
+})();
+</script>
+</body>
+</html>

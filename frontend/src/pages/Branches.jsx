@@ -186,13 +186,13 @@ export default function Branches() {
                         <div>
                           <label className="text-xs text-slate-600 mb-1 block">Rooms (comma separated)</label>
                           <input
-                            className="input !py-1.5 text-sm"
+                            className="input !py-1.5 text-sm uppercase"
                             placeholder="101, 102, 103, 201, 202"
                             value={block.rooms.join(', ')}
                             onChange={(e) => {
                               const rooms = e.target.value
                                 .split(',')
-                                .map((r) => r.trim())
+                                .map((r) => r.trim().toUpperCase())
                                 .filter(Boolean);
                               const newBlocks = [...form.blocks];
                               newBlocks[bIdx].rooms = rooms;

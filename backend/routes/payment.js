@@ -72,10 +72,13 @@ router.post('/razorpay-webhook', async (req, res) => {
       const body = req.rawBody || JSON.stringify(req.body || {});
       const expected = crypto.createHmac('sha256', secret).update(body).digest('hex');
       if (!signature || signature !== expected) {
+        console.warn('[payment] webhook signature verification failed', { hasSignature: !!signature });
         return res.status(401).json({ error: 'invalid signature' });
       }
 
       const event = typeof req.body === 'object' ? req.body : JSON.parse(body);
+      console.log('[payment] razorpay webhook received', { event: event.event, eventId: event.id });
+
       if (
         event.event === 'payment_link.paid' ||
         event.event === 'payment.captured'
@@ -87,16 +90,30 @@ router.post('/razorpay-webhook', async (req, res) => {
           event.payload?.payment?.entity?.id ||
           event.payload?.payment_link?.entity?.payments?.[0]?.payment_id;
 
+        console.log('[payment] payment event details', { linkId, paymentId });
+
         if (linkId) {
           const bill = await RentBill.findOne({ razorpayPaymentLinkId: linkId });
-          if (bill && !bill.paid) {
-            await markBillPaid(bill, {
-              paymentId: paymentId || '',
-              method: 'razorpay_link',
-              source: 'razorpay_webhook',
-            });
+          if (bill) {
+            console.log('[payment] bill found', { billId: bill._id.toString(), currentPaid: bill.paid });
+            if (!bill.paid) {
+              console.log('[payment] marking bill as paid via Razorpay webhook');
+              await markBillPaid(bill, {
+                paymentId: paymentId || '',
+                method: 'razorpay_link',
+                source: 'razorpay_webhook',
+              });
+            } else {
+              console.log('[payment] bill already paid, skipping');
+            }
+          } else {
+            console.warn('[payment] no bill found for razorpayPaymentLinkId', linkId);
           }
+        } else {
+          console.warn('[payment] no linkId found in webhook payload');
         }
+      } else {
+        console.log('[payment] ignoring non-payment event', { event: event.event });
       }
 
     res.json({ ok: true });

@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Search, Trash2, Phone, ExternalLink, FileText } from 'lucide-react';
+import { Search, Trash2, Phone, ExternalLink, FileText, CheckCircle2, Clock } from 'lucide-react';
 import api from '../api';
+
+function thisMonthKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
 
 export default function RegisteredUsers() {
   const [users, setUsers] = useState([]);
@@ -8,6 +13,7 @@ export default function RegisteredUsers() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState('');
   const [branch, setBranch] = useState('');
+  const [bills, setBills] = useState([]);
 
   const load = async () => {
     setLoading(true);
@@ -17,9 +23,19 @@ export default function RegisteredUsers() {
     } finally { setLoading(false); }
   };
 
+  const loadBills = async () => {
+    try {
+      const { data } = await api.get('/rent-bills', { params: { monthKey: thisMonthKey() } });
+      setBills(data.bills);
+    } catch (err) {
+      console.error('Failed to load bills:', err);
+    }
+  };
+
   useEffect(() => {
     api.get('/branches/all').then((r) => setBranches(r.data.branches)).catch(() => {});
     load();
+    loadBills();
     // eslint-disable-next-line
   }, []);
 
@@ -29,6 +45,13 @@ export default function RegisteredUsers() {
     if (!confirm('Delete this resident? This does not refund any payments.')) return;
     await api.delete(`/users/${id}`);
     load();
+  };
+
+  // Helper to check if user has paid this month
+  const getUserBillStatus = (userId) => {
+    const bill = bills.find((b) => b.user?._id === userId);
+    if (!bill) return null;
+    return bill.paid;
   };
 
   return (
@@ -67,6 +90,7 @@ export default function RegisteredUsers() {
                   <th className="px-4 py-3 text-left">Room</th>
                   <th className="px-4 py-3 text-left">WhatsApp</th>
                   <th className="px-4 py-3 text-left">Joined</th>
+                  <th className="px-4 py-3 text-left">This Month</th>
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
@@ -92,6 +116,17 @@ export default function RegisteredUsers() {
                     <td className="px-4 py-3">{u.block ? `${u.block}-` : ''}{u.roomNumber || '—'}</td>
                     <td className="px-4 py-3 whitespace-nowrap"><span className="inline-flex items-center gap-1"><Phone size={14}/> {u.phone}</span></td>
                     <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{u.dateJoined || new Date(u.createdAt).toLocaleDateString()}</td>
+                    <td className="px-4 py-3">
+                      {(() => {
+                        const paid = getUserBillStatus(u._id);
+                        if (paid === true) {
+                          return <span className="pill bg-emerald-100 text-emerald-700"><CheckCircle2 size={12}/> Paid</span>;
+                        } else if (paid === false) {
+                          return <span className="pill bg-amber-100 text-amber-700"><Clock size={12}/> Unpaid</span>;
+                        }
+                        return <span className="text-slate-400 text-xs">No bill</span>;
+                      })()}
+                    </td>
                     <td className="px-4 py-3 text-right">
                       <div className="inline-flex gap-1">
                         {u.registrationPdfUrl && (

@@ -20,8 +20,11 @@ function App() {
     if (!token) { setLoading(false); return; }
     api
       .get('/auth/verify')
-      .then((r) => setAuth(r.data.user))
-      .catch(() => localStorage.removeItem('kpg_token'))
+      .then((r) => setAuth(r.data.user || null))
+      .catch(() => {
+        localStorage.removeItem('kpg_token');
+        setAuth(null);
+      })
       .finally(() => setLoading(false));
   }, []);
 

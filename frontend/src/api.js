@@ -16,6 +16,10 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (r) => r,
   (err) => {
+    // Ensure error is an Error object with a proper message
+    if (err && typeof err === 'object' && !err.message) {
+      err.message = err.response?.data?.error || err.response?.data?.message || 'Request failed';
+    }
     if (err.response?.status === 401) {
       localStorage.removeItem('kpg_token');
       if (!window.location.pathname.endsWith('/login')) {

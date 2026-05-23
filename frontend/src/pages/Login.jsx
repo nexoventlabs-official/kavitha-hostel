@@ -17,7 +17,8 @@ export default function Login({ setAuth }) {
       setAuth(data.user);
       nav('/', { replace: true });
     } catch (err) {
-      setError(err.response?.data?.error || err.message);
+      const msg = err.response?.data?.error || err.message || 'Login failed';
+      setError(String(msg));
     } finally { setLoading(false); }
   };
 

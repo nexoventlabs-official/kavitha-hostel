@@ -317,7 +317,6 @@ async function sendOrderDetails(to, opts) {
       },
     },
   };
-  if (razorpayMid) paymentSetting.payment_gateway.razorpay.account_id = razorpayMid;
 
   const action = {
     name: 'review_and_pay',

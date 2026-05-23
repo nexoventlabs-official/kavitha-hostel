@@ -321,7 +321,6 @@ async function sendPayRent(phone, lang) {
       await meta.sendOrderDetails(phone, {
         referenceId,
         configurationName,
-        razorpayMid: process.env.RAZORPAY_MID || undefined,
         headerImageUrl: headerImageUrl || undefined,
         headerText: !headerImageUrl ? 'Rent Bill' : undefined,
         bodyText,

@@ -46,9 +46,12 @@ async function handlePaymentInteractive(msg) {
     pay.payment_id ||
     '';
 
-  console.log('[webhook] payment interactive', { referenceId, status, paymentId });
+  console.log('[webhook] payment interactive', { referenceId, status, paymentId, fullPayload: pay });
 
-  if (!referenceId) return false;
+  if (!referenceId) {
+    console.warn('[webhook] no referenceId in payment payload');
+    return false;
+  }
 
   const bill = await findBillByReference(referenceId);
   if (!bill) {
@@ -56,18 +59,24 @@ async function handlePaymentInteractive(msg) {
     return true;
   }
 
+  console.log('[webhook] bill found', { billId: bill._id.toString(), currentPaid: bill.paid, metaReferenceId: bill.metaReferenceId });
+
   // Only "captured" / "success" / "paid" mark the bill as paid
   if (['captured', 'success', 'successful', 'paid', 'completed'].includes(status)) {
     if (!bill.paid) {
+      console.log('[webhook] marking bill as paid', { billId: bill._id.toString(), status, paymentId });
       await markBillPaid(bill, {
         paymentId,
         method: 'meta_native',
         metaPaymentStatus: status,
         source: 'meta_native_pay',
       });
+    } else {
+      console.log('[webhook] bill already paid, skipping', { billId: bill._id.toString() });
     }
   } else {
     // Persist whatever status came in (pending / failed / etc.) for audit
+    console.log('[webhook] payment not successful, updating status', { billId: bill._id.toString(), status });
     bill.metaPaymentStatus = status || bill.metaPaymentStatus;
     if (paymentId && !bill.paymentId) bill.paymentId = paymentId;
     await bill.save();
